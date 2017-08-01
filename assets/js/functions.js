@@ -36,7 +36,8 @@ function initDataBase() {
 	});
 	database.ref('/turn').set({
 		player: 'one',
-		move: ''
+		playerOneMove: '',
+		playerTwoMove: ''
 	});
 }
 
@@ -132,66 +133,98 @@ function registerMove(playerDiv, playerNumber) {
 		$(playerDiv + ' .move').on('click', function() {
 			let move = $(this).html();
 
+			// if(playerNumber === 'one') {
+			// 	playerNumber = 'two';
+			// 	playerOneMove = move;
+			// }else{
+			// 	playerNumber = 'one';
+			// 	playerTwoMove = move;
+			// 	database.ref().once('value')
+			// 		.then(function(snapshot) {
+			// 			playerOneMove = snapshot.val().turn.move;
+			// 			eval();
+			// 		});
+			// }
+
 			if(playerNumber === 'one') {
-				playerNumber = 'two';
-				playerOneMove = move;
-			}else{
-				playerNumber = 'one';
-				playerTwoMove = move;
+				database.ref('/turn').update({
+					playerOneMove: move,
+					player: 'two'
+				});
+			}else if(playerNumber === 'two') {
+				database.ref('/turn').update({
+					playerTwoMove: move,
+					player: 'one'
+				});
 				eval();
 			}
 
-			database.ref('/turn').update({
-				move: move,
-				player: playerNumber
-			});
+			$(this).off('click');
+
+			// database.ref('/turn').update({
+			// 	move: move,
+			// 	player: playerNumber
+			// });
 		});
 	}
 }
 
 function eval() {
-	let winner = 'none';
-	if(playerOneMove === 'ROCK' && playerTwoMove === 'SCISSORS') {
-		winner = 'one';
-	}else if(playerOneMove === 'PAPER' && playerTwoMove === 'ROCK') {
-		winner = 'one';
-	}else if(playerOneMove === 'SCISSORS' && playerTwoMove === 'PAPER') {
-		winner = 'one';
-	}else if(playerOneMove === playerTwoMove) {
-		winner = 'none';
-	}else{
-		winner = 'two';
-	}
+	database.ref().once('value')
+		.then(function(snapshot) {
+		let winner = 'none';
+		playerOneMove = snapshot.val().turn.playerOneMove;
+		playerTwoMove = snapshot.val().turn.playerTwoMove;
 
-	console.log(winner);
+		if(playerOneMove !== '' && playerTwoMove !== '') {
+			if(playerOneMove === 'ROCK' && playerTwoMove === 'SCISSORS') {
+				winner = 'one';
+			}else if(playerOneMove === 'PAPER' && playerTwoMove === 'ROCK') {
+				winner = 'one';
+			}else if(playerOneMove === 'SCISSORS' && playerTwoMove === 'PAPER') {
+				winner = 'one';
+			}else if(playerOneMove === playerTwoMove) {
+				winner = 'none';
+			}else{
+				winner = 'two';
+			}
 
-	if(winner === 'one') {
-		database.ref('/players').update({
-			one: {
-				name: players.one.name,
-				wins: players.one.wins + 1,
-				losses: players.one.losses
-			},
-			two: {
-				name: players.two.name,
-				wins: players.two.wins,
-				losses: players.two.losses + 1
+			console.log(winner);
+
+			if(winner === 'one') {
+				database.ref('/players').update({
+					one: {
+						name: snapshot.val().players.one.name,
+						wins: snapshot.val().players.one.wins + 1,
+						losses: snapshot.val().players.one.losses
+					},
+					two: {
+						name: snapshot.val().players.two.name,
+						wins: snapshot.val().players.two.wins,
+						losses: snapshot.val().players.two.losses + 1
+					}
+				});
+			}else if(winner === 'two') {
+				database.ref('players').update({
+					two: {
+						name: snapshot.val().players.two.name,
+						wins: snapshot.val().players.two.wins + 1,
+						losses: snapshot.val().players.two.losses
+					},
+					one: {
+						name: snapshot.val().players.one.name,
+						wins: snapshot.val().players.one.wins,
+						losses: snapshot.val().players.one.losses + 1
+					}
+				});
 			}
-		});
-	}else if(winner === 'two') {
-		database.ref('players').update({
-			two: {
-				name: players.two.name,
-				wins: players.two.wins + 1,
-				losses: players.two.losses
-			},
-			one: {
-				name: players.one.name,
-				wins: players.one.wins,
-				losses: players.one.losses + 1
-			}
-		});
-	}
+
+			database.ref('/turn').update({
+				playerOneMove: '',
+				playerTwoMove: ''
+			});
+		}
+	});
 }
 
 $(document).ready(function() {
@@ -201,5 +234,5 @@ $(document).ready(function() {
 		let playerName = $('#PlayerName').val();
 		addPlayer(playerName);
 	});
-	initDataBase();
+	//initDataBase();
 });
