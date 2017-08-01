@@ -13,6 +13,8 @@ var database = firebase.database();
 var playerId = '';
 var player1 = false;
 var player2 = false;
+var playerOneMove = '';
+var playerTwoMove = '';
 
 var players = {
 	one: {
@@ -33,30 +35,37 @@ function initDataBase() {
 		two: players.two
 	});
 	database.ref('/turn').set({
-		player: '',
+		player: 'one',
 		move: ''
 	});
 }
 
 function checkForPlayers() {
-	database.ref().once('value')
-		.then(function(snapshot) {
+	database.ref().on('value', function(snapshot){
 			if(snapshot.val().players.one.name !== 'Player 1') {
 				let name = snapshot.val().players.one.name;
 				$('#Player1 .player-name').html(name);
 				player1 = true;
+
+				players.one.name = snapshot.val().players.one.name;
+				players.one.wins = snapshot.val().players.one.wins;
+				players.one.losses = snapshot.val().players.one.losses;
 			}
+
 			if(snapshot.val().players.two.name !== 'Player 2') {
 				let name = snapshot.val().players.two.name;
 				$('#Player2 .player-name').html(name);
 				player2 = true;
+
+				players.two.name = snapshot.val().players.two.name;
+				players.two.wins = snapshot.val().players.two.wins;
+				players.two.losses = snapshot.val().players.two.losses;
 			}
 
-			if(!player1 || !player2) {
-				$('#JoinGame').removeClass('invisible');
+			if(player1 && player2) {
+				$('#JoinGame').addClass('invisible');
 			}
-
-		});
+	});
 }
 
 function addPlayer(addedPlayer) {
@@ -72,6 +81,7 @@ function addPlayer(addedPlayer) {
 					}
 				});
 				$('#Player1 .player-name').html(addedPlayer);
+				players.one.name = addedPlayer;
 				playerId = 'one'
 				player1 = true;
 			}else if(snapshot.val().players.two.name === 'Player 2') {
@@ -83,30 +93,36 @@ function addPlayer(addedPlayer) {
 					}
 				});
 				$('#Player2 .player-name').html(addedPlayer);
+				players.two.name = addedPlayer;
 				playerId = 'two';
 				player2 = true;
 			}
 
-			if(player1 && player2) {
-				turnSelect();
-				database.ref('/turn').update({
-					player: 'one'
-				});
-			}
+			// if(player1 && player2) {
+			// 	turnSelect();
+			// 	database.ref('/turn').update({
+			// 		player: 'one'
+			// 	});
+			// }
 		});
 	$('#JoinGame').addClass('invisible');
 }
 
 function turnSelect() {
 	database.ref().on('value', function(snapshot) {
-		let player = snapshot.val().turn.player;
-		if(player == 'one') {
-			$('#Player2 .box').removeClass('green');
-			$('#Player1 .box').addClass('green');
-			registerMove('#Player1', player);
-		}else if(turn == 'two') {
-			$('#Player1 .box').removeClass('green');
-			$('#Player2 box').addClass('green');
+		let player1 = snapshot.val().players.one.name;
+		let player2 = snapshot.val().players.two.name;
+		if(player1 !== 'Player 1' && player2 !== 'Player 2') {
+			let player = snapshot.val().turn.player;
+			if(player == 'one') {
+				$('#Player2 .box').removeClass('green');
+				$('#Player1 .box').addClass('green');
+				registerMove('#Player1', player);
+			}else if(player == 'two') {
+				$('#Player1 .box').removeClass('green');
+				$('#Player2 .box').addClass('green');
+				registerMove('#Player2', player);
+			}
 		}
 	});
 }
@@ -115,18 +131,75 @@ function registerMove(playerDiv, playerNumber) {
 	if(playerId === playerNumber) {
 		$(playerDiv + ' .move').on('click', function() {
 			let move = $(this).html();
+
+			if(playerNumber === 'one') {
+				playerNumber = 'two';
+				playerOneMove = move;
+			}else{
+				playerNumber = 'one';
+				playerTwoMove = move;
+				eval();
+			}
+
 			database.ref('/turn').update({
-				move: move
+				move: move,
+				player: playerNumber
 			});
+		});
+	}
+}
+
+function eval() {
+	let winner = 'none';
+	if(playerOneMove === 'ROCK' && playerTwoMove === 'SCISSORS') {
+		winner = 'one';
+	}else if(playerOneMove === 'PAPER' && playerTwoMove === 'ROCK') {
+		winner = 'one';
+	}else if(playerOneMove === 'SCISSORS' && playerTwoMove === 'PAPER') {
+		winner = 'one';
+	}else if(playerOneMove === playerTwoMove) {
+		winner = 'none';
+	}else{
+		winner = 'two';
+	}
+
+	console.log(winner);
+
+	if(winner === 'one') {
+		database.ref('/players').update({
+			one: {
+				name: players.one.name,
+				wins: players.one.wins + 1,
+				losses: players.one.losses
+			},
+			two: {
+				name: players.two.name,
+				wins: players.two.wins,
+				losses: players.two.losses + 1
+			}
+		});
+	}else if(winner === 'two') {
+		database.ref('players').update({
+			two: {
+				name: players.two.name,
+				wins: players.two.wins + 1,
+				losses: players.two.losses
+			},
+			one: {
+				name: players.one.name,
+				wins: players.one.wins,
+				losses: players.one.losses + 1
+			}
 		});
 	}
 }
 
 $(document).ready(function() {
 	checkForPlayers();
+	turnSelect();
 	$('#JoinGame .submit').on('click', function() {
 		let playerName = $('#PlayerName').val();
 		addPlayer(playerName);
 	});
-	//initDataBase();
+	initDataBase();
 });
