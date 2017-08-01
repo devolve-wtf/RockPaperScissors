@@ -14,7 +14,55 @@
 
 </head>
 <body>
-	<h1>Hello World</h1>
+	
+	<header class="container">
+		<h1 class="page-header">Rock Paper Scissors</h1>
+	</header>
+
+	<main class="container">
+
+		<section id="Game" class="row">
+
+			<div id="JoinGame" class="col-md-6 col-md-offset-3 invisible">
+				<div class="input-group">
+				  <span class="input-group-addon" id="basic-addon1">@</span>
+				  <input id="PlayerName" type="text" class="form-control" placeholder="Username" aria-describedby="basic-addon1">
+				  <span class="input-group-addon submit">join</span>
+				</div>
+			</div>
+
+			<div id="Player1" class="col-md-4">
+				<div class="box">
+					<div class="player-name">Waiting for player</div>
+					<div class="moves">
+						<div class="move rock col-xs-12">ROCK</div>
+						<div class="move paper col-xs-12">PAPER</div>
+						<div class="move scissors col-xs-12">SCISSORS</div>
+					</div>
+				</div>				
+			</div>
+
+			<div id="Messages" class="col-md-4">
+				<div class="box"></div>
+			</div>
+
+			<div id="Player2" class="col-md-4">
+				<div class="box">
+					<div class="player-name">Waiting for player</div>
+					<div class="moves">
+						<div class="move rock col-xs-12">ROCK</div>
+						<div class="move paper col-xs-12">PAPER</div>
+						<div class="move scissors col-xs-12">SCISSORS</div>
+					</div>
+				</div>
+			</div>
+		</section>
+
+		<section id="Chat">
+			<div class="jumbotron"></div>
+		</section>
+	
+	</main>
 
 	<!-- jQuery -->
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>

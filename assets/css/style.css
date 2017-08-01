@@ -1,3 +1,11 @@
-h1 {
-	color: red;
+.box {
+	border: 1px solid;
+	min-height: 400px;
+}
+
+.green {
+	border-color: green;
+	outline-color: green;
+	outline-width: thick;
+	outline-style: dashed;
 }
