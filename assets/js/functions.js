@@ -15,19 +15,7 @@ var player1 = false;
 var player2 = false;
 var playerOneMove = '';
 var playerTwoMove = '';
-
-var players = {
-	one: {
-		name: 'Player 1',
-		wins: 0,
-		losses: 0
-	},
-	two: {
-		name: 'Player 2',
-		wins: 0,
-		losses: 0
-	}
-}
+var registeredName = 'spectator';
 
 function initDataBase() {
 	database.ref('/players').set({
@@ -39,28 +27,35 @@ function initDataBase() {
 		playerOneMove: '',
 		playerTwoMove: ''
 	});
+	database.ref('/chat').set({
+		messages: ['hi']
+	});
 }
 
 function checkForPlayers() {
 	database.ref().on('value', function(snapshot){
 			if(snapshot.val().players.one.name !== 'Player 1') {
 				let name = snapshot.val().players.one.name;
+				let wins = snapshot.val().players.one.wins;
+				let losses = snapshot.val().players.one.losses;
 				$('#Player1 .player-name').html(name);
+				$('.player-one .name').html('&larr; ' + name);
+				$('.player-one .wins .count').html(wins);
+				$('.player-one .losses .count').html(losses);
+				$('.player-one').removeClass('invisible');
 				player1 = true;
-
-				players.one.name = snapshot.val().players.one.name;
-				players.one.wins = snapshot.val().players.one.wins;
-				players.one.losses = snapshot.val().players.one.losses;
 			}
 
 			if(snapshot.val().players.two.name !== 'Player 2') {
 				let name = snapshot.val().players.two.name;
+				let wins = snapshot.val().players.two.wins;
+				let losses = snapshot.val().players.two.losses;
 				$('#Player2 .player-name').html(name);
+				$('.player-two .name').html(name + ' &rarr;');
+				$('.player-two .wins .count').html(wins);
+				$('.player-two .losses .count').html(losses);
+				$('.player-two').removeClass('invisible');
 				player2 = true;
-
-				players.two.name = snapshot.val().players.two.name;
-				players.two.wins = snapshot.val().players.two.wins;
-				players.two.losses = snapshot.val().players.two.losses;
 			}
 
 			if(player1 && player2) {
@@ -70,6 +65,7 @@ function checkForPlayers() {
 }
 
 function addPlayer(addedPlayer) {
+	registeredName = addedPlayer;
 	let ref = database.ref();
 	ref.once('value')
 		.then(function(snapshot) {
@@ -82,7 +78,6 @@ function addPlayer(addedPlayer) {
 					}
 				});
 				$('#Player1 .player-name').html(addedPlayer);
-				players.one.name = addedPlayer;
 				playerId = 'one'
 				player1 = true;
 			}else if(snapshot.val().players.two.name === 'Player 2') {
@@ -94,17 +89,10 @@ function addPlayer(addedPlayer) {
 					}
 				});
 				$('#Player2 .player-name').html(addedPlayer);
-				players.two.name = addedPlayer;
 				playerId = 'two';
 				player2 = true;
 			}
-
-			// if(player1 && player2) {
-			// 	turnSelect();
-			// 	database.ref('/turn').update({
-			// 		player: 'one'
-			// 	});
-			// }
+			disconnect();
 		});
 	$('#JoinGame').addClass('invisible');
 }
@@ -129,22 +117,10 @@ function turnSelect() {
 }
 
 function registerMove(playerDiv, playerNumber) {
+	$('.move').removeClass('bg-primary');
 	if(playerId === playerNumber) {
 		$(playerDiv + ' .move').on('click', function() {
 			let move = $(this).html();
-
-			// if(playerNumber === 'one') {
-			// 	playerNumber = 'two';
-			// 	playerOneMove = move;
-			// }else{
-			// 	playerNumber = 'one';
-			// 	playerTwoMove = move;
-			// 	database.ref().once('value')
-			// 		.then(function(snapshot) {
-			// 			playerOneMove = snapshot.val().turn.move;
-			// 			eval();
-			// 		});
-			// }
 
 			if(playerNumber === 'one') {
 				database.ref('/turn').update({
@@ -158,13 +134,8 @@ function registerMove(playerDiv, playerNumber) {
 				});
 				eval();
 			}
-
+			$(this).addClass('bg-primary');
 			$(this).off('click');
-
-			// database.ref('/turn').update({
-			// 	move: move,
-			// 	player: playerNumber
-			// });
 		});
 	}
 }
@@ -227,6 +198,59 @@ function eval() {
 	});
 }
 
+function sendMessage() {
+	$('#Chat .submit').on('click', function() {
+		database.ref('/chat').push('@' + registeredName + ': ' + $('#ChatMessage').val());
+		$('#ChatMessage').val('');
+	});
+
+	database.ref('/chat').on('child_added', function(snapshot) {
+		let message = snapshot.val();
+		$('.jumbotron').append('<p>' + message + '</p>');
+	});
+}
+
+function disconnect() {
+
+	if(playerId === 'one') {
+		database.ref('/players').onDisconnect().update({
+			one: {
+				name: 'Player 1',
+				wins: 0,
+				losses: 0
+			}
+		});
+	}else if(playerId === 'two') {
+		database.ref('/players').onDisconnect().update({
+			two: {
+				name: 'Player 2',
+				wins: 0,
+				losses: 0
+			}
+		});
+	}
+
+	database.ref().on('value', function(snapshot) {
+		let playerOneName = snapshot.val().players.one.name;
+		let playerTwoName = snapshot.val().players.two.name;
+		if(player1 && playerOneName === 'Player 1') {
+			alert('The player left the game');
+			$('#Player1 .player-name').html('Waiting for new player');
+			$('.player-one').addClass('invisible');
+			player1 = false;
+			database.ref('/chat').set('');
+		}
+
+		if(player2 && playerTwoName === 'Player 2') {
+			alert('The Player left the game');
+			$('#Player2 .player-name').html('Waiting for new player');
+			$('.player-two').addClass('invisible');
+			player2 = false;
+			database.ref('/chat').set('');
+		}
+	});
+}
+
 $(document).ready(function() {
 	checkForPlayers();
 	turnSelect();
@@ -235,4 +259,5 @@ $(document).ready(function() {
 		addPlayer(playerName);
 	});
 	//initDataBase();
+	sendMessage();
 });

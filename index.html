@@ -43,7 +43,21 @@
 			</div>
 
 			<div id="Messages" class="col-sm-4">
-				<div class="box"></div>
+				<div class="box">
+					<div class="player-one col-xs-12 invisible">
+						<p class="name"></p>
+						<p class="wins">wins: <span class="count"></span></p>
+						<p class="losses">losses: <span class="count"></span></p>
+					</div>
+					
+					<hr>
+
+					<div class="player-two col-xs-12 text-right invisible">
+						<p class="name"></p>
+						<p class="wins">wins: <span class="count"></span></p>
+						<p class="losses">losses: <span class="count"></span></p>
+					</div>
+				</div>
 			</div>
 
 			<div id="Player2" class="col-sm-4">
@@ -59,7 +73,16 @@
 		</section>
 
 		<section id="Chat">
-			<div class="jumbotron"></div>
+			<div class="jumbotron">
+				
+			</div>
+
+			<div class="input-group">
+			  <span class="input-group-addon" id="basic-addon1">@</span>
+			  <input id="ChatMessage" type="text" class="form-control" placeholder="Message" aria-describedby="basic-addon1">
+			  <span class="input-group-addon submit">send</span>
+			</div>
+
 		</section>
 	
 	</main>
