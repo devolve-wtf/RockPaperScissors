@@ -66,6 +66,7 @@ function checkForPlayers() {
 
 function addPlayer(addedPlayer) {
 	registeredName = addedPlayer;
+	$('#ScreenName').html('@' + registeredName);
 	let ref = database.ref();
 	ref.once('value')
 		.then(function(snapshot) {
@@ -233,20 +234,27 @@ function disconnect() {
 	database.ref().on('value', function(snapshot) {
 		let playerOneName = snapshot.val().players.one.name;
 		let playerTwoName = snapshot.val().players.two.name;
-		if(player1 && playerOneName === 'Player 1') {
-			alert('The player left the game');
+		if(playerOneName === 'Player 1') {
 			$('#Player1 .player-name').html('Waiting for new player');
 			$('.player-one').addClass('invisible');
-			player1 = false;
+			$('.box').removeClass('green');
 			database.ref('/chat').set('');
+			if(player1) {
+				alert('The player left the game');
+				player1 = false;
+			}
+
 		}
 
-		if(player2 && playerTwoName === 'Player 2') {
-			alert('The Player left the game');
+		if(playerTwoName === 'Player 2') {
 			$('#Player2 .player-name').html('Waiting for new player');
 			$('.player-two').addClass('invisible');
-			player2 = false;
+			$('.box').removeClass('green');
 			database.ref('/chat').set('');
+			if(player2) {
+				alert('The Player left the game');
+				player2 = false;
+			}
 		}
 	});
 }
@@ -260,4 +268,5 @@ $(document).ready(function() {
 	});
 	//initDataBase();
 	sendMessage();
+	disconnect();
 });
