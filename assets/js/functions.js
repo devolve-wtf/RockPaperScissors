@@ -17,21 +17,6 @@ var playerOneMove = '';
 var playerTwoMove = '';
 var registeredName = 'spectator';
 
-function initDataBase() {
-	database.ref('/players').set({
-		one: players.one,
-		two: players.two
-	});
-	database.ref('/turn').set({
-		player: 'one',
-		playerOneMove: '',
-		playerTwoMove: ''
-	});
-	database.ref('/chat').set({
-		messages: ['hi']
-	});
-}
-
 function checkForPlayers() {
 	database.ref().on('value', function(snapshot){
 			if(snapshot.val().players.one.name !== 'Player 1') {
@@ -243,6 +228,11 @@ function disconnect() {
 				alert('The player left the game');
 				player1 = false;
 			}
+			database.ref('/turn').update({
+				player: 'one',
+				playerOneMove: '',
+				playerTwoMove: ''
+			});
 
 		}
 
@@ -255,6 +245,11 @@ function disconnect() {
 				alert('The Player left the game');
 				player2 = false;
 			}
+			database.ref('/turn').update({
+				player: 'one',
+				playerOneMove: '',
+				playerTwoMove: ''
+			});
 		}
 	});
 }
@@ -266,7 +261,6 @@ $(document).ready(function() {
 		let playerName = $('#PlayerName').val();
 		addPlayer(playerName);
 	});
-	//initDataBase();
 	sendMessage();
 	disconnect();
 });
